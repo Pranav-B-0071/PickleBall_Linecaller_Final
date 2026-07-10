@@ -1,0 +1,9 @@
+# CAM2 - Realme - RIGHT side of the court (disclosure camera B)
+# Checkerboard intrinsics @ 1920x1080 landscape. dist order = OpenCV [k1,k2,p1,p2,k3].
+K:
+- [1426.2682, 0.0, 959.2706]
+- [0.0, 1424.6803, 549.9628]
+- [0.0, 0.0, 1.0]
+dist: [0.012444, -0.012453, 0.000973, -0.001525, 0.320559]
+image_size: [1920, 1080]
+rms: 0.77015

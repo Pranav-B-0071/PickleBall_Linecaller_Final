@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/page3.css') }}">{% endblock %}
+
+{% macro cam_slot(role, title, extra="") %}
+<div class="media {{ extra }}" data-cam="{{ role }}">
+  <video data-video playsinline muted></video>
+  <div class="media-empty" data-empty>{{ title }} - not uploaded</div>
+  <span class="cam-tag">{{ title }}</span>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Analysis</h1>
+    <div class="sub">Synchronized playback of all three cameras with the top-view homography. Bounces are tracked across the full clip; IN/OUT is called only inside the near-half ROI.</div>
+  </div>
+  <div class="head-actions" style="display:flex; gap:var(--space-3)">
+    <button class="btn btn-secondary" id="calcBtn">{{ icon('sync') }} Calculate</button>
+    <button class="btn btn-primary" id="analyzeBtn">{{ icon('play-circle') }} Analyze</button>
+  </div>
+</div>
+
+<div class="analysis-grid">
+  <div>
+    <div class="video-wall">
+      {{ cam_slot('cam1', 'CAM 1') }}
+      {{ cam_slot('cam2', 'CAM 2') }}
+      <div class="cam3-slot">{{ cam_slot('cam3', 'CAM 3') }}</div>
+    </div>
+
+    <div class="playback-bar" id="playback">
+      <button class="btn btn-icon btn-ghost" data-step-back title="Previous frame">{{ icon('step-back') }}</button>
+      <button class="btn btn-icon btn-primary" data-playpause title="Play / pause">{{ icon('play') }}</button>
+      <button class="btn btn-icon btn-ghost" data-step-fwd title="Next frame">{{ icon('step-fwd') }}</button>
+      <input type="range" class="seek" min="0" max="1000" value="0" data-seek>
+      <span class="time"><span data-cur>0.00</span> / <span data-dur>0.00</span> s</span>
+      <div class="speed-group" data-speeds>
+        <button data-rate="0.25">0.25×</button>
+        <button data-rate="0.5">0.5×</button>
+        <button class="active" data-rate="1">1×</button>
+        <button data-rate="2">2×</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:var(--space-4)">
+    <div class="card topview-panel">
+      <div class="card-head"><h3>{{ icon('target') }} Top view · near half</h3><span class="badge badge-info plain" id="analysisSource">idle</span></div>
+      <div class="media"><canvas id="topview" width="440" height="520"></canvas></div>
+    </div>
+
+    <div class="verdict-banner idle" id="verdict">Run analysis to see live line calls</div>
+
+    <div class="card pad">
+      <div class="eyebrow" style="margin-bottom:12px">Summary</div>
+      <div class="stat-grid" id="summaryCards">
+        <div class="stat"><div class="k">Bounces</div><div class="v">-</div></div>
+        <div class="stat accent"><div class="k">IN</div><div class="v">-</div></div>
+        <div class="stat warn"><div class="k">OUT</div><div class="v">-</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Bounce feed</h3></div>
+      <div class="card-body"><div class="verdict-feed" id="verdictFeed"><div class="muted">No bounces yet.</div></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/video-sync.js') }}"></script>
+<script src="{{ url_for('static', filename='js/topview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/page3.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,9 @@
+# CAM3 - Oneplus - CENTER / kitchen camera, level with the net (disclosure camera K)
+# Checkerboard intrinsics @ 1920x1080 landscape. dist order = OpenCV [k1,k2,p1,p2,k3].
+K:
+- [1771.3552, 0.0, 946.2842]
+- [0.0, 1801.6089, 530.6256]
+- [0.0, 0.0, 1.0]
+dist: [0.171290, -0.314643, -0.004639, -0.001979, -3.210724]
+image_size: [1920, 1080]
+rms: 0.52849

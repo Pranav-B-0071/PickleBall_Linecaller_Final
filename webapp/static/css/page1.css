@@ -1,0 +1,73 @@
+/* Page 1 - Upload + Court Calibration */
+
+.cam-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+  gap: var(--space-4);
+}
+
+.cam-card { display: flex; flex-direction: column; }
+.cam-card .card-body { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.cam-card .stage-wrap { position: relative; }
+.cam-card .media { aspect-ratio: 16 / 9; }
+.cam-card .media .stage { position: absolute; inset: 0; }
+
+/* sync controls */
+.sync-controls {
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3) var(--space-4);
+  align-items: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: var(--space-3) var(--space-4);
+}
+.sync-controls .offset-val { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sync-controls .slider-cell { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+.sync-controls .slider-cell span { font-size: .74rem; color: var(--ink-faint); min-width: 42px; text-align: center; }
+.sync-status { font-size: .82rem; }
+
+/* keypoint editor toolbar */
+.kp-toolbar {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  padding-top: var(--space-2);
+}
+.kp-toolbar .zoom-val { font-size: .8rem; color: var(--ink-muted); min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+.kp-toolbar .grow-sep { flex: 1; }
+
+.roi-legend { display: flex; align-items: center; gap: 16px; font-size: .8rem; color: var(--ink-muted); flex-wrap: wrap; }
+.roi-legend .swatch { display: inline-flex; align-items: center; gap: 6px; }
+.roi-legend .swatch i { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+.sw-kp { background: var(--tan); border: 1px solid var(--border-strong); border-radius: 50% !important; }
+.sw-corner { background: var(--action); border-radius: 50% !important; }
+.sw-roi { background: var(--teal-fill); border: 1.5px solid var(--teal); }
+
+/* frame stepper */
+.frame-ctl {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: var(--space-2) var(--space-3);
+}
+.frame-ctl .fc-label { font-size: .78rem; font-weight: 600; color: var(--ink-muted); margin-right: 4px; }
+.frame-ctl .fc-info {
+  min-width: 96px; text-align: center; font-size: .82rem; font-weight: 600;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xs); padding: 3px 8px;
+}
+.frame-ctl .hint-line { font-size: .74rem; }
+
+/* PnP measured-vs-recovered result */
+.pnp-line {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: .82rem; padding: 8px 10px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.pnp-line .pnp-badge { font-weight: 650; }
+.pnp-line.ok { background: var(--green-soft); border-color: #bcd8c4; }
+.pnp-line.off { background: var(--amber-soft); border-color: #e6d3a6; }
+.pnp-line .mono { font-variant-numeric: tabular-nums; }
+.pnp-line .pnp-warn { width: 100%; margin-top: 4px; color: #9c3a27; font-size: .78rem; }
+
+.cam3-note {
+  display: flex; align-items: center; gap: 10px; color: var(--ink-muted);
+  font-size: .86rem; background: var(--surface-2); border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm); padding: var(--space-3) var(--space-4);
+}

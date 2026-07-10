@@ -1,0 +1,85 @@
+/* Design tokens - single source of truth for the light-premium theme.
+   Palette drawn from the inspiration video: warm sand canvas, dark-navy top
+   bar, tan/charcoal actions, court-green status, dark embedded media panels. */
+
+:root {
+  /* surfaces */
+  --canvas:      #EDE7DB;
+  --surface:     #F7F3EC;
+  --surface-2:   #FBF9F4;
+  --surface-sunk:#E7DFD0;
+  --border:      #DED5C4;
+  --border-strong:#CDC0A9;
+  --topbar:      #1B2430;
+  --topbar-ink:  #EFE9DC;
+  --media-bg:    #12161C;
+  --media-line:  #263041;
+
+  /* ink */
+  --ink:         #232019;
+  --ink-muted:   #6B6357;
+  --ink-faint:   #97907F;
+
+  /* actions */
+  --action:      #2B2A26;   /* charcoal - upload / detect / run */
+  --action-ink:  #F3EEE3;
+  --action-hover:#3B3A34;
+  --tan:         #D8C39A;   /* tan - confirm / primary-affirmative */
+  --tan-hover:   #CBB585;
+  --tan-ink:     #37301D;
+
+  /* status */
+  --green:       #3F8F5B;   /* IN / LOCKED */
+  --green-soft:  #E4EFE6;
+  --red:         #C0503A;   /* OUT */
+  --red-soft:    #F4E3DE;
+  --amber:       #C79A3E;   /* CLOSE_IN / warning */
+  --amber-soft:  #F5EAD3;
+  --teal:        #2EA08C;   /* court ROI accent */
+  --teal-fill:   rgba(46,160,140,0.26);
+  --blue-info:   #3E6E8E;
+
+  /* geometry */
+  --r-xs: 6px;  --r-sm: 9px;  --r-md: 13px;  --r-lg: 18px;  --r-pill: 999px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+
+  --shadow-sm: 0 1px 2px rgba(31,26,15,.06), 0 1px 3px rgba(31,26,15,.05);
+  --shadow-md: 0 4px 14px rgba(31,26,15,.08), 0 2px 5px rgba(31,26,15,.05);
+  --shadow-lg: 0 12px 34px rgba(31,26,15,.13);
+
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --dur: 180ms;
+
+  --font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --mono: "SFMono-Regular", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+
+  --topbar-h: 60px;
+  --maxw: 1360px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 650; letter-spacing: -0.01em; color: var(--ink); }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1.02rem; }
+
+a { color: inherit; text-decoration: none; }
+
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-muted); }
+.faint { color: var(--ink-faint); }

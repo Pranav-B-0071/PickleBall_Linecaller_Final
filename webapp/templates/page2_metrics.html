@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/page2.css') }}">{% endblock %}
+
+{% macro metrics_panel(kind, title, video_role, csv_role, axis_label, pos_max, in_opts) %}
+<section class="card metrics-panel" data-panel="{{ kind }}">
+  <div class="card-head">
+    <h3>{{ icon('chart') }} {{ title }}</h3>
+    <span class="panel-score"><span class="big-metric" data-accuracy>-</span><span class="cap">IN/OUT correct</span></span>
+  </div>
+  <div class="card-body">
+    <div class="upload-pair">
+      <div class="dropzone" data-dropzone data-role="{{ video_role }}">
+        {{ icon('upload', 'dz-icon') }}<div class="dz-title">{{ title }} video</div><div class="dz-hint">.mp4 / .mov</div>
+        <input type="file" accept="video/mp4,video/quicktime,.mp4,.mov" data-fileinput>
+      </div>
+      <div class="dropzone" data-dropzone data-role="{{ csv_role }}">
+        {{ icon('file-csv', 'dz-icon') }}<div class="dz-title">{{ title }} CSV</div><div class="dz-hint">throw, call, x, y</div>
+        <input type="file" accept=".csv,text/csv" data-fileinput>
+      </div>
+    </div>
+
+    <div class="stage-wrap hidden" data-stagewrap>
+      <div class="media">
+        <div class="stage" data-stage>
+          <video data-video playsinline muted></video>
+          <img class="frame" data-frame hidden alt="">
+          <canvas class="overlay" data-boundary hidden></canvas>
+        </div>
+        <span class="cam-tag">{{ title }} · drag the boundary line</span>
+      </div>
+    </div>
+
+    <div class="boundary-controls">
+      <div class="field"><label>{{ axis_label }} (ft)</label>
+        <input type="range" min="0" max="{{ pos_max }}" step="0.5" data-bpos>
+      </div>
+      <div class="field"><label>IN side</label>
+        <select data-bside>
+          {% for val, lab in in_opts %}<option value="{{ val }}">{{ lab }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" data-compare>{{ icon('target') }} Compare</button>
+    </div>
+
+    <div class="scroll-y">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>t (s)</th><th>court (x, y)</th><th>your call</th><th>model</th></tr></thead>
+        <tbody data-table><tr><td colspan="5" class="muted">Upload a CSV and press Compare.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="matrix-wrap" data-confusion-wrap hidden>
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Confusion matrix</div>
+        <div class="scroll-x"><table class="matrix" data-confusion></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Label Metrics</h1>
+    <div class="sub">Line-call accuracy - the model's IN/OUT vs your manual calls. Upload each session's video + CSV, set the boundary line, and Compare.</div>
+  </div>
+  <a class="btn btn-affirm" href="{{ url_for('pages.analysis') }}">Continue {{ icon('step-fwd') }}</a>
+</div>
+
+<div class="metrics-cols">
+  {{ metrics_panel('baseline', 'Baseline', 'baseline_video', 'baseline_csv', 'Baseline line',
+                   44, [('above','Above line → IN'), ('below','Below line → IN')]) }}
+  {{ metrics_panel('sideline', 'Sideline', 'sideline_video', 'sideline_csv', 'Sideline',
+                   20, [('left','Left of line → IN'), ('right','Right of line → IN')]) }}
+</div>
+
+<div class="dashboard-section">
+  <div class="eyebrow">Match analytics</div>
+  <div class="stat-grid" id="cards">
+    <div class="stat"><div class="k">Total Bounces</div><div class="v">-</div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/page2.js') }}"></script>
+{% endblock %}

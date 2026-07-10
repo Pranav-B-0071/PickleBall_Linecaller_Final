@@ -1,0 +1,26 @@
+# Core (the tests run with just these + pytest)
+numpy>=1.24
+opencv-python>=4.8
+PyYAML>=6.0
+pytest>=7.0
+
+# Clap auto-sync: bundles a static ffmpeg binary so audio decoding needs no
+# system ffmpeg install (sync.py resolves it automatically).
+imageio-ffmpeg>=0.5
+
+# TRK-1 (filled): ONNX GridTrackNet inference - no TensorFlow needed.
+# Swap for onnxruntime-gpu (CUDA 12 + cuDNN 9) and set tracking.provider: gpu
+# in config.yaml to run on the GPU.
+onnxruntime>=1.17
+
+# Web application (webapp/): 3-page Flask UI + API over the pipeline.
+Flask>=3.0
+
+# KPT-1 (filled): YOLO-pose court keypoint model (models/small_model_best.pt).
+# Pulls torch; the web app auto-uses the model when present, else mocks.
+ultralytics>=8.2
+
+# Needed once remaining placeholders are filled - uncomment as you go:
+# tensorflow>=2.13        # TRK-2 only: fine-tune GridTrackNet, then re-export ONNX
+# simpleaudio>=1.0        # PLC-1: guided-placement beeps (laptop)
+# fastapi, uvicorn, websockets   # ARCH-1: real-time server

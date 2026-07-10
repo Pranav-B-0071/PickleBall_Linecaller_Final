@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280">
+  <title>{{ page_title }} · Pickleball Linecaller</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/pickleball.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body data-active="{{ active }}">
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('pages.calibration') }}">
+      <img class="ball" src="{{ url_for('static', filename='img/pickleball.svg') }}" alt="">
+      Pickleball Linecaller <small>· CV line-calling</small>
+    </a>
+    <nav class="nav">
+      <a href="{{ url_for('pages.calibration') }}" class="{{ 'active' if active in ('upload','sync','calibrate') }}">Calibration</a>
+      <a href="{{ url_for('pages.metrics') }}" class="{{ 'active' if active == 'metrics' }}">Metrics</a>
+      <a href="{{ url_for('pages.analysis') }}" class="{{ 'active' if active == 'analysis' }}">Analysis</a>
+    </nav>
+  </header>
+
+  <div class="stepper" id="stepper">
+    {% for key, label in steps %}
+      <div class="step {{ 'active' if key == active }}" data-step="{{ key }}">
+        <span class="dot" data-idx="{{ loop.index }}">{{ loop.index }}</span>
+        <span class="label">{{ label }}</span>
+      </div>
+      {% if not loop.last %}<div class="step-sep"></div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div class="toast-host" id="toastHost"></div>
+
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/page1.css') }}">{% endblock %}
+
+{% macro cam_card(role, title, mode) %}
+<section class="card cam-card" data-cam="{{ role }}" data-mode="{{ mode }}">
+  <div class="card-head">
+    <h3>{{ icon('camera') }} {{ title }}{% if mode == 'kitchen' %} <span class="faint" style="font-weight:500;font-size:.85rem">· kitchen</span>{% endif %}</h3>
+    <span data-status><span class="badge badge-neutral plain">not calibrated</span></span>
+  </div>
+  <div class="card-body">
+    <div class="dropzone" data-dropzone data-role="{{ role }}">
+      {{ icon('upload', 'dz-icon') }}
+      <div class="dz-title">Drop {{ title }} video or click to browse</div>
+      <div class="dz-hint">.mp4 or .mov</div>
+      <input type="file" accept="video/mp4,video/quicktime,.mp4,.mov" data-fileinput>
+    </div>
+
+    <div class="stage-wrap hidden" data-stagewrap>
+      <div class="media">
+        <div class="stage" data-stage>
+          <video data-video playsinline muted></video>
+          <img class="frame" data-frame hidden alt="">
+          <canvas class="overlay" data-overlay hidden></canvas>
+        </div>
+        <span class="cam-tag">{{ title }}</span>
+      </div>
+
+      <div class="frame-ctl" data-framectl>
+        <span class="fc-label">Calibration frame</span>
+        <button class="btn btn-ghost btn-sm" data-fstep="-10">-10</button>
+        <button class="btn btn-ghost btn-sm" data-fstep="-5">-5</button>
+        <button class="btn btn-ghost btn-sm" data-fstep="-1">-1</button>
+        <span class="fc-info num" data-frameinfo>frame 0</span>
+        <button class="btn btn-ghost btn-sm" data-fstep="1">+1</button>
+        <button class="btn btn-ghost btn-sm" data-fstep="5">+5</button>
+        <button class="btn btn-ghost btn-sm" data-fstep="10">+10</button>
+        <span class="grow"></span>
+        <span class="hint-line">static camera: any clean frame calibrates the whole clip</span>
+      </div>
+
+      <div class="sync-controls" data-sync>
+        <div class="field"><label>Frame offset</label>
+          <div class="stepper-num">
+            <button class="btn btn-ghost btn-sm" data-off-dec>−</button>
+            <input type="number" step="0.5" value="0" data-off-input>
+            <button class="btn btn-ghost btn-sm" data-off-inc>+</button>
+          </div>
+        </div>
+        <div class="offset-val"><span class="num" data-off-display>0.0</span> <span class="faint">f</span></div>
+        <div class="sync-status"><span class="badge badge-neutral plain" data-sync-method>reference</span></div>
+        <div class="slider-cell">
+          <span>−60</span>
+          <input type="range" min="-60" max="60" step="0.5" value="0" data-off-slider>
+          <span>+60</span>
+          <button class="btn btn-ghost btn-sm" data-off-reset title="Reset">{{ icon('reset') }}</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        {% if mode == 'court' %}
+        <button class="btn btn-primary" data-detect>{{ icon('target') }} Detect Court</button>
+        {% else %}
+        <button class="btn btn-primary" data-kitchen-draw>{{ icon('target') }} Draw kitchen box</button>
+        {% endif %}
+        <button class="btn btn-affirm hidden" data-confirm>{{ icon('check') }} Confirm calibration</button>
+        <button class="btn btn-ghost btn-sm" data-replace title="Upload a different clip for this camera">{{ icon('upload') }} Replace video</button>
+        <span class="grow"></span>
+        <span data-lock></span>
+      </div>
+
+      <div class="kp-toolbar hidden" data-kptools>
+        <button class="btn btn-ghost btn-sm" data-undo title="Undo">{{ icon('undo') }}</button>
+        <button class="btn btn-ghost btn-sm" data-redo title="Redo">{{ icon('redo') }}</button>
+        <button class="btn btn-ghost btn-sm" data-kpreset title="Reset points">{{ icon('reset') }}</button>
+        <span class="grow-sep"></span>
+        <button class="btn btn-ghost btn-sm" data-zoomout>{{ icon('zoom-out') }}</button>
+        <span class="zoom-val" data-zoomval>100%</span>
+        <button class="btn btn-ghost btn-sm" data-zoomin>{{ icon('zoom-in') }}</button>
+      </div>
+      {% if mode == 'court' %}
+      <div class="roi-legend hidden" data-legend>
+        <span class="swatch"><i class="sw-kp"></i> keypoint</span>
+        <span class="swatch"><i class="sw-corner"></i> corner</span>
+        <span class="swatch"><i class="sw-roi"></i> near-half ROI (auto)</span>
+        <span class="grow"></span>
+        <span class="hint-line" data-detect-note></span>
+      </div>
+      {% else %}
+      <div class="roi-legend hidden" data-legend>
+        <span class="swatch"><i class="sw-roi" style="background:rgba(199,154,62,0.24);border-color:#C79A3E"></i> kitchen box (4 points)</span>
+        <span class="grow"></span>
+        <span class="hint-line" data-detect-note>Drag the 4 corners to cover the kitchen. Bounces inside are counted separately.</span>
+      </div>
+      {% endif %}
+      {% if mode == 'court' %}<div class="pnp-line hidden" data-pnp></div>{% endif %}
+    </div>
+  </div>
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Court Calibration</h1>
+    <div class="sub">Upload the three camera clips, sync them from the clap cue, then lock CAM&nbsp;1 &amp; CAM&nbsp;2 onto the court (near-half ROI is derived automatically). CAM&nbsp;3 gets a manual 4-point kitchen box.</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" id="autoSync">{{ icon('sync') }} Auto-sync all</button>
+    <a class="btn btn-affirm" href="{{ url_for('pages.metrics') }}">Continue {{ icon('step-fwd') }}</a>
+  </div>
+</div>
+
+<div class="cam-grid">
+  {{ cam_card('cam1', 'CAM 1', 'court') }}
+  {{ cam_card('cam2', 'CAM 2', 'court') }}
+  {{ cam_card('cam3', 'CAM 3', 'kitchen') }}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/court-overlay.js') }}"></script>
+<script src="{{ url_for('static', filename='js/keypoint-editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/page1.js') }}"></script>
+{% endblock %}

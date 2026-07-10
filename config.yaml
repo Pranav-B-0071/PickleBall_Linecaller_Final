@@ -1,0 +1,117 @@
+# =====================================================================
+# PICKLEBALL PHASE 2 - master configuration
+# Every tunable and every path lives here. Cookbook recipes reference
+# these keys by name. TUNE-* markers = values to calibrate on real data.
+# =====================================================================
+
+paths:
+  # PLACEHOLDER[KPT-1]: path to the court-keypoint model retrained on
+  # real-world (phone-view) frames. Cookbook Recipe 2.
+  keypoint_weights: "models/court_keypoints_realworld.pt"
+  # TRK-1 filled: exported ONNX GridTrackNet (tennis baseline, from the
+  # ball_tracker_handoff bundle). PLACEHOLDER[TRK-2]: replace with weights
+  # fine-tuned on pickleball and re-exported (Recipe 5 Part B).
+  tracker_weights: "models/model_weights.onnx"
+  # Only needed for TRK-2 retraining (LabellingTool/DataGen/Train live there);
+  # runtime inference no longer touches the repo.
+  gridtracknet_repo: "third_party/GridTrackNet"
+  data_root: "data"
+  intrinsics_dir: "calib/intrinsics"     # one yaml per camera (Recipe 1)
+
+capture:
+  fps: 60                                # locked capture setting (§5.1)
+  resolution: [1920, 1080]
+
+checkerboard:                            # §5.2 / Recipe 1
+  inner_corners: [9, 6]
+  square_size_mm: 25.0                   # TUNE-0: MEASURE your printed board!
+
+calibration:
+  ransac_thresh_px: 5.0                  # §4.5
+  min_inliers: 6                         # §4.7
+  lock_threshold_px: 8.0                 # §4.7
+  lock_window_s: 10.0
+
+# Tape-measured camera rig positions in the canonical court frame (Recipe 3).
+# Units: FEET. Frame: origin = far-baseline-left corner; X across 0 -> 20,
+# Y along 0 -> 44 (net at 22), Z = height above the court plane. Cameras sit
+# OUTSIDE the court, so X may be < 0 or > 20 and Y may be > 44. These are the
+# ground-truth positions to sanity-check against solve_camera_pose()'s PnP
+# estimate (calibration.camera_pos_ft); the line-call itself does not use them.
+# Source: measured 2025-02-12 (drawing). Metric originals in the comments.
+camera_positions_ft:
+  cam1: [-5.0, 58.09, 5.0]     # near-left,  5 ft (1.524 m) outside L sideline, 14.09 ft (4.2954 m) behind near baseline, 5 ft (1.524 m) high
+  cam2: [25.0, 58.09, 5.0]     # near-right, 5 ft (1.524 m) outside R sideline, 14.09 ft (4.2954 m) behind near baseline, 5 ft (1.524 m) high
+  cam3: [32.76, 22.0, 1.83]    # right side @ net (y=22), 12.76 ft (3.889 m) outside R sideline, 1.83 ft (0.5588 m) high
+
+sync:
+  clap_search_window_s: 15.0              # only the first 15 s carries useful audio;
+                                          # the clap is detected inside this window
+  energy_win_ms: 10.0
+  skip_start_s: 0.3                       # ignore the recording-start click (not the clap)
+  refine_with_xcorr: true                 # GCC-PHAT sub-sample refinement (accuracy > speed)
+
+cache:                                    # persistent preprocessing cache (cache.py)
+  enabled: true
+  dir: "data/cache"                       # per-clip, content-hashed; survives runs
+
+precompute:                              # demo.py offline precompute
+  footage_dir: "Footage_CFR"              # Cam1/Cam2/Cam3 clips for the demo
+                                          # (constant-60fps re-encodes; raw VFR
+                                          # originals stay in Footage/)
+  tracking_window_s: 50.0                 # run GridTrackNet on the first 50 s of each clip
+
+tracking:
+  input_size: [768, 432]                 # GridTrackNet native input
+  frames_per_batch: 5                    # GridTrackNet 5-in / 5-out design
+  min_confidence: 0.30                   # TUNE-1 (inactive until TRK-2 exports scores)
+  provider: "gpu"                        # "gpu" needs onnxruntime-gpu + CUDA 12/cuDNN 9
+  frame_mode: "dual"                     # 60fps capture -> even/odd 30fps streams
+                                         # (model's trained spacing); "sequential" for 30fps
+  reject_outliers: true                  # drop tracker teleport spikes (ID-switches)
+  outlier_max_jump_px: 60.0
+
+bounce:                                  # §5.6-5.7 + separation-signal derivation
+  smooth_window_frames: 5                # Kalman/moving-average smoothing of s(t)
+  min_prominence_ft: 0.5                 # TUNE-2: prominence of an s(t) minimum
+  max_pair_gap_frames: 2                 # no real detection within this gap of a
+                                         # candidate -> that camera flagged occluded
+  vshape_min_fall_frames: 3              # single-view fallback: frames falling before V
+  subframe_refine: true                  # parabola-intersection sub-frame contact time
+  min_bounce_prob: 0.35                  # TUNE-5: BNC-1 image-shape filter; a candidate
+                                         # is dropped when BOTH cameras score below this.
+                                         # 0.0 = annotate only (no filtering). Calibrate on
+                                         # labelled rallies per Recipe 6 (95%/90% target).
+  max_separation_ft: 1.0                 # TUNE-5b: BNC-1 contact-height filter. s_min ~
+                                         # k*Z_contact, so paddle hits (Z >> 0) leave a big
+                                         # separation floor while true bounces converge to
+                                         # ~noise. Set from the Recipe 7 s-at-true-bounce
+                                         # distribution (well above its 95th percentile).
+
+fusion:                                  # §5.8
+  dispute_threshold_ft: 0.164            # TUNE-3: 5 cm; above this, arbitrate
+  weight_floor: 0.05                     # never let one camera's weight hit zero
+  reproj_err_scale_px: 3.0               # TUNE-4: reproj error -> weight decay scale
+
+line_call:
+  zone: "near_half"
+  margin_ft: 0.0
+
+analysis:                                # Page-3 web run (real GridTrackNet path)
+  window_s: 60.0                         # seconds of clip to analyze per Run (from
+                                         # the start). On GPU GridTrackNet is
+                                         # ~13 ms/frame, so 60 s ~= 1 min of
+                                         # compute; lower it on CPU-only machines
+                                         # (~0.22 s/frame there), 0 = whole clip.
+
+webapp:                                  # 3-page Flask UI (webapp/)
+  host: "127.0.0.1"
+  port: 5001
+  data_subdir: "webapp"                  # sessions live under data/<data_subdir>/<id>
+  max_upload_mb: 512
+  allowed_video_ext: [".mp4", ".mov"]
+  allowed_csv_ext: [".csv"]
+  # KPT-1 injection: drop the trained court model here and it is used
+  # automatically (needs `ultralytics`); absent -> mocked detection.
+  court_model_weights: "models/best.pt"
+  bounce_marker_ttl_s: 10                 # top-view bounce markers auto-expire

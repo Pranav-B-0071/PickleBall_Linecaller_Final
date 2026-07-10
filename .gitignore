@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+.pytest_cache/
+data/raw/
+data/frames/
+data/labels/
+data/tracker_labels/
+models/*.pt
+models/*.h5
+third_party/
+calls.json
+
+# Claude
+CLAUDE.md
+claude.md
+
+# webapp session uploads & derived artifacts
+data/webapp/
+
+# local footage and generated tracking outputs
+Footage/*
+!Footage/README.md

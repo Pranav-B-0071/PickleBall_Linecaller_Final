@@ -1,0 +1,29 @@
+/* Page 2 - Label Metrics */
+
+.metrics-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);
+}
+.metrics-panel .card-body { display: flex; flex-direction: column; gap: var(--space-4); }
+.metrics-panel .media { aspect-ratio: 16 / 9; }
+.metrics-panel .media .stage { position: absolute; inset: 0; }
+.metrics-panel .stage-wrap { position: relative; }
+
+.upload-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+.boundary-controls {
+  display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-3); align-items: end;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: var(--space-3) var(--space-4);
+}
+
+.panel-score { display: flex; align-items: baseline; gap: 12px; }
+.panel-score .cap { font-size: .84rem; color: var(--ink-muted); }
+
+.matrix-wrap { display: flex; gap: var(--space-5); flex-wrap: wrap; align-items: flex-start; }
+
+.dashboard-section { margin-top: var(--space-6); }
+.dashboard-section .eyebrow { margin-bottom: var(--space-3); }
+
+@media (max-width: 1080px) {
+  .metrics-cols { grid-template-columns: 1fr; }
+}

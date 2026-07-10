@@ -1,0 +1,42 @@
+{# Inline SVG icon macros - no external assets, currentColor-driven. #}
+
+{% macro icon(name, cls="") -%}
+<svg class="ic {{ cls }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {%- if name == "upload" -%}
+    <path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+  {%- elif name == "camera" -%}
+    <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h0a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.2"/>
+  {%- elif name == "target" -%}
+    <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+  {%- elif name == "check" -%}
+    <path d="M20 6L9 17l-5-5"/>
+  {%- elif name == "play" -%}
+    <path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>
+  {%- elif name == "pause" -%}
+    <rect x="7" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/>
+  {%- elif name == "step-back" -%}
+    <path d="M18 6v12L9 12z" fill="currentColor" stroke="none"/><rect x="5" y="6" width="2.4" height="12" rx="1" fill="currentColor" stroke="none"/>
+  {%- elif name == "step-fwd" -%}
+    <path d="M6 6v12l9-6z" fill="currentColor" stroke="none"/><rect x="16.6" y="6" width="2.4" height="12" rx="1" fill="currentColor" stroke="none"/>
+  {%- elif name == "undo" -%}
+    <path d="M9 7L4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-1"/>
+  {%- elif name == "redo" -%}
+    <path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h1"/>
+  {%- elif name == "reset" -%}
+    <path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4h4"/>
+  {%- elif name == "zoom-in" -%}
+    <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>
+  {%- elif name == "zoom-out" -%}
+    <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/>
+  {%- elif name == "file-csv" -%}
+    <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4"/><path d="M8 15h1.5M8 12h8M8 18h5" stroke-width="1.4"/>
+  {%- elif name == "sync" -%}
+    <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M4 20v-4h4"/>
+  {%- elif name == "play-circle" -%}
+    <circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z" fill="currentColor" stroke="none"/>
+  {%- elif name == "chart" -%}
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+  {%- endif -%}
+</svg>
+{%- endmacro %}
