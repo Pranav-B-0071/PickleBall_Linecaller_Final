@@ -305,46 +305,18 @@ def analyze_from_tracked(session_state: dict, store, sid: str, cfg, fps: float,
 def _detect_single_view(track_a, track_b, calib_a, calib_b, cfg, fps: float,
                         offset: float) -> dict:
     """Detect bounces per camera in image space, place each on the court via its
-    homography, and merge the two cameras. Returns the Page-3 payload (same shape
-    as ``_calls_to_payload``)."""
+    homography, and fuse the two cameras with the real dispute/confidence logic
+    (``fusion.fuse_event``, via ``_fuse_single_view_events``) instead of an ad
+    hoc merge. Returns the Page-3 payload (``_calls_to_payload``)."""
     # image-space contact -> court-ft, then a stable near-ground projection
     off_px = float(cfg.get("bounce.contact_offset_px", 0.0))  # nudge to ball's bottom
     a = _camera_bounces_court(track_a.uv, calib_a, offset=0.0, off_px=off_px, cfg=cfg)
     b = _camera_bounces_court(track_b.uv, calib_b, offset=offset, off_px=off_px, cfg=cfg)
-    merged = _merge_camera_bounces(
-        a, b, calib_a.mean_reproj_px, calib_b.mean_reproj_px,
+    calls = _fuse_single_view_events(
+        a, b, calib_a, calib_b, cfg,
         window=float(cfg.get("bounce.sv_merge_window_frames", 10.0)))
-
-    bounces = []
-    for frame, xy, matched in merged:
-        x, y = float(xy[0]), float(xy[1])
-        in_roi = _in_roi(x, y)
-        call = line_call(np.array([x, y]), zone="near_half")
-        bounces.append({
-            "frame": float(frame), "t": round(float(frame) / fps, 4),
-            "x": round(x, 3), "y": round(y, 3),
-            "in_roi": in_roi,
-            "verdict": call["verdict"] if in_roi else "N/A",
-            "margin_ft": round(call["distance_ft"], 3) if in_roi else None,
-            "nearest_line": call["nearest_line"] if in_roi else None,
-            "confidence": 0.9 if matched else 0.7,
-        })
-    bounces.sort(key=lambda bd: bd["frame"])
-    trajectory = _trajectory_from_bounces(bounces, fps)
-
-    considered = [bd for bd in bounces if bd["in_roi"]]
-    summary = {
-        "total_bounces": len(bounces),
-        "in_roi_bounces": len(considered),
-        "in": sum(1 for bd in considered if bd["verdict"] == "IN"),
-        "out": sum(1 for bd in considered if bd["verdict"] == "OUT"),
-        "avg_confidence": round(float(np.mean([bd["confidence"] for bd in bounces])), 3)
-                          if bounces else 0.0,
-    }
-    print(f"[analyze] single-view bounces: cam1={len(a)} cam2={len(b)} "
-          f"merged={len(bounces)} (in_roi={len(considered)})")
-    return {"source": "gridtracknet", "trajectory": trajectory,
-            "bounces": bounces, "summary": summary}
+    print(f"[analyze] single-view bounces: cam1={len(a)} cam2={len(b)} fused={len(calls)}")
+    return _calls_to_payload(calls, fps)
 
 
 def _camera_bounces_court(uv, calib, offset: float, off_px: float, cfg):
@@ -367,21 +339,45 @@ def _camera_bounces_court(uv, calib, offset: float, off_px: float, cfg):
         # +y is downward in the image, i.e. toward the ball's ground contact
         px = np.array([[bnc.px_x, bnc.px_y + off_px]], dtype=np.float64)
         xy = apply_homography(calib.H, px)[0]
-        # A genuine bounce contact projects near the court; a mis-detected
-        # airborne point blows up through the ground homography - drop those.
-        if not (-15.0 <= xy[0] <= 35.0 and -15.0 <= xy[1] <= 59.0):
+        # A genuine bounce contact lands on the court; a mis-detected airborne
+        # point blows up through the ground homography - drop those. The court
+        # is an exact axis-aligned rectangle in feet space, so this bounds
+        # check IS the "inside the calibrated 4-point region" test - no
+        # polygon math needed (that would only matter in image/pixel space).
+        margin = float(cfg.get("bounce.court_gate_margin_ft", 2.0))
+        if not (-margin <= xy[0] <= COURT_W_FT + margin
+                and -margin <= xy[1] <= COURT_L_FT + margin):
             continue
         out.append((f_local - offset, xy))
     return out
 
 
-def _merge_camera_bounces(a, b, reproj_a: float, reproj_b: float, window: float):
-    """Merge two cameras' ``(aligned_frame, court_xy)`` bounce lists. A pair
-    within ``window`` frames is one event (position = reprojection-weighted mean,
-    lower-error camera trusted more); unmatched bounces are kept as single-view.
-    Returns ``(frame, court_xy, matched)`` sorted by frame."""
-    wa, wb = 1.0 / max(reproj_a, 1e-3), 1.0 / max(reproj_b, 1e-3)
-    used, merged = set(), []
+def _fuse_single_view_events(a, b, calib_a, calib_b, cfg, window: float) -> list:
+    """Match each camera's single-view ``(aligned_frame, court_xy)`` bounces
+    within ``window`` frames, package each match (or unmatched single-camera
+    detection) as a ``bounce.BounceEvent``, and resolve it with the SAME
+    dispute/occlusion/confidence-tier logic (``fusion.fuse_event``) the
+    dual-camera pipeline uses - so single-view detection (robust on this rig's
+    low cameras) still gets real two-camera fusion where both cameras agree,
+    instead of an ad hoc weighted average. A bounce seen by only one camera is
+    still reported, honestly tagged ``confidence="single-view"`` by
+    ``fuse_event`` (its documented behavior when one estimate is ``None``).
+    Returns a ``list[LineCall]`` sorted by frame."""
+    from pickleball_phase2.bounce import BounceEvent
+    from pickleball_phase2.fusion import fuse_event
+
+    fusion_cfg = {**cfg.get("fusion", {}), "margin_ft": cfg.get("line_call.margin_ft", 0.0)}
+    ra, rb = calib_a.mean_reproj_px, calib_b.mean_reproj_px
+
+    def _event(frame, xa, xb, occ_a, occ_b):
+        sep = float(np.linalg.norm(xa - xb)) if xa is not None and xb is not None else 0.0
+        method = "single_view_matched" if xa is not None and xb is not None else "single_view_only"
+        return BounceEvent(
+            frame=frame, xy_a_ft=xa, xy_b_ft=xb, separation_ft=sep, method=method,
+            quality={"conf_a": 1.0, "conf_b": 1.0, "reproj_a_px": ra, "reproj_b_px": rb,
+                     "occluded_a": occ_a, "occluded_b": occ_b})
+
+    used, events = set(), []
     for fa, xya in a:
         j, best = None, window
         for k, (fb, _) in enumerate(b):
@@ -393,14 +389,16 @@ def _merge_camera_bounces(a, b, reproj_a: float, reproj_b: float, window: float)
         if j is not None:
             used.add(j)
             fb, xyb = b[j]
-            merged.append((0.5 * (fa + fb), (wa * xya + wb * xyb) / (wa + wb), True))
+            events.append(_event(0.5 * (fa + fb), xya, xyb, False, False))
         else:
-            merged.append((fa, xya, False))
+            events.append(_event(fa, xya, None, False, True))
     for k, (fb, xyb) in enumerate(b):
         if k not in used:
-            merged.append((fb, xyb, False))
-    merged.sort(key=lambda m: m[0])
-    return merged
+            events.append(_event(fb, None, xyb, True, False))
+
+    calls = [fuse_event(e, fusion_cfg, zone="near_half") for e in events]
+    calls.sort(key=lambda c: c.frame)
+    return calls
 
 
 def _track_from_csv(csv_path, fps: float, offset: float = 0.0):

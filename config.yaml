@@ -87,8 +87,15 @@ bounce:                                  # §5.6-5.7 + separation-signal derivat
                                          # separation floor while true bounces converge to
                                          # ~noise. Set from the Recipe 7 s-at-true-bounce
                                          # distribution (well above its 95th percentile).
+  court_gate_margin_ft: 2.0              # webapp single-view path: a projected contact
+                                         # point beyond the court bounds (+/- this margin)
+                                         # is a mis-detected airborne point, not a bounce -
+                                         # the court is an exact rectangle in feet space,
+                                         # so this bounds check IS the calibrated-region test.
 
-fusion:                                  # §5.8
+fusion:                                  # §5.8 - also used by the webapp single-view path
+                                         # (analysis_service._fuse_single_view_events) to
+                                         # arbitrate/merge the two cameras' bounce events
   dispute_threshold_ft: 0.164            # TUNE-3: 5 cm; above this, arbitrate
   weight_floor: 0.05                     # never let one camera's weight hit zero
   reproj_err_scale_px: 3.0               # TUNE-4: reproj error -> weight decay scale
